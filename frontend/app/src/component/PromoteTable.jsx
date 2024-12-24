@@ -32,8 +32,7 @@ import { useQuery, QueryClientProvider, QueryClient } from '@tanstack/react-quer
 import { padding } from '@mui/system';
 
 const PromoteTable = ({ rows, isAuthorized, refreshData }) => {
-
-    console.log("rows", rows);
+  
     const [openDialog, setOpenDialog] = useState(false);
     const [inputText, setInputText] = useState('');
     const [charCount, setCharCount] = useState(0);
