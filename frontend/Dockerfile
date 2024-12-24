@@ -3,14 +3,13 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
-COPY package.json package-lock.json ./
+# Копируем исходный код приложения
+COPY ./app ./
 
 # Установка зависимостей
 RUN npm install
 
-# Копируем исходный код приложения
-COPY ./app ./
+
 
 # Передаём переменную среды в сборку
 ARG REACT_APP_API_URL

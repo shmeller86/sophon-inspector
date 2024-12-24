@@ -49,6 +49,7 @@ const useFetchDetails = (operator, enabled) => {
 const DetailPanel = ({ row }) => {
   const operator = row.original.operator;
   const { data, isLoading, isError } = useFetchDetails(operator, row.getIsExpanded());
+  
 
   if (isLoading) {
     return <CircularProgress />;
@@ -94,6 +95,7 @@ const DelegationTable = ({ rows }) => {
     const [openDelegatorsDialog, setOpenDelegatorsDialog] = useState(false);
     const [selectedDelegators, setSelectedDelegators] = useState([]);
 
+
     const StyledBadge = styled(Badge)(({ theme }) => ({
         '& .MuiBadge-badge': {
             right: -3,
@@ -113,7 +115,22 @@ const DelegationTable = ({ rows }) => {
         maxSize: 250,
         size: 200,
         Cell: ({ cell }) => (
-            cell.getValue()
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              navigator.clipboard.writeText(cell.getValue());
+              alert('Operator copied to clipboard');
+            }}
+          >
+            <Typography variant="body2" noWrap>
+              {cell.getValue()}
+            </Typography>
+          </Box>
         ),
     },
     {
@@ -133,31 +150,81 @@ const DelegationTable = ({ rows }) => {
         ),
     },
     {
-        accessorKey: 'status',
-        header: 'Status',
-        size: 80,
-        Cell: ({ cell }) => (
-            <Box
-                component="span"
-                sx={(theme) => ({
-                    backgroundColor:
-                    cell.getValue() === 'Active'
-                    ? 'rgba(75, 192, 192, 1)' // Цвет для Active
-                    : 'rgba(255, 99, 132, 1)', // Цвет для Inactive
-                    borderRadius: '0.5rem',
-                    color: '#fff',
-                    padding: '0.5rem',
-                })}
-                >
-                {cell.getValue()}
-            </Box>
-        ),
-    },
+      accessorKey: 'status',
+      header: 'Status',
+      filterVariant: 'checkbox',
+      filterFn: (row, columnId, filterValue) => {
+          const rowValue = row.getValue(columnId);
+          if (!filterValue) {
+              console.log('FilterValue is empty, showing all records');
+              return true;
+          }
+            if (filterValue.includes(true) && rowValue === 'Active') {
+              return true;
+          } else if (filterValue.includes(false) && rowValue === 'Inactive') {
+              return true;
+          }
+            return false;
+      },
+      size: 120,
+      Cell: ({ cell }) => (
+          <Box
+              component="span"
+              sx={{
+                  backgroundColor:
+                      cell.getValue() === 'Active'
+                          ? 'rgba(75, 192, 192, 1)' // Цвет для Active
+                          : 'rgba(255, 99, 132, 1)', // Цвет для Inactive
+                  borderRadius: '0.5rem',
+                  color: '#fff',
+                  padding: '0.5rem',
+              }}
+          >
+              {cell.getValue()}
+          </Box>
+      ),
+  }
+  ,
     { accessorKey: 'rewards', header: 'Rewards', size: 80,},
-    { accessorKey: 'fee', header: 'Fee', size: 80 },
-    { accessorKey: 'uptime', header: 'Uptime', size: 80 },
+    { accessorKey: 'fee', 
+      header: 'Fee', 
+      size: 120,
+      Cell: ({ cell }) => `${Number(cell.getValue()).toFixed(1)}%`,
+      filterVariant: 'range-slider',
+        filterFn: 'betweenInclusive', // default (or between)
+        muiFilterSliderProps: {
+          marks: true,
+          max: 100.0, //custom max (as opposed to faceted max)
+          min: 0.0, //custom min (as opposed to faceted min)
+          step: 0.5,
+        },
+    },
+    { accessorKey: 'uptime', 
+      header: 'Uptime', 
+      size: 120,
+      Cell: ({ cell }) => `${Number(cell.getValue()).toFixed(1)}%`,
+      filterVariant: 'range-slider',
+        filterFn: 'betweenInclusive', // default (or between)
+        muiFilterSliderProps: {
+          marks: true,
+          max: 100.0, //custom max (as opposed to faceted max)
+          min: 0.0, //custom min (as opposed to faceted min)
+          step: 1,
+        },
+    },
     { accessorKey: 'createdAt', header: 'Created At', size: 80 },
-    { accessorKey: 'actualDelegations', header: 'Actual Delegations', size: 80 },
+    { accessorKey: 'actualDelegations', 
+      header: 'Delegations', 
+      size: 120,
+      filterVariant: 'range-slider',
+      filterFn: 'betweenInclusive',
+      muiFilterSliderProps: {
+        marks: true,
+        max: 20,
+        min: 0,
+        step: 1,
+      },
+    },
     { accessorKey: 'totalDelegateAmount', header: 'Total Delegate Amount', size: 80, enableHiding: true },
     { accessorKey: 'totalUndelegateAmount', header: 'Total Undelegate Amount', size: 80, enableHiding: true },
     { accessorKey: 'totalDelegateOperations', header: 'Total Delegate Operations', size: 80, enableHiding: true },
@@ -183,8 +250,8 @@ const DelegationTable = ({ rows }) => {
     enableColumnFilters: true,
     enableRowSelection: false,
     enableBottomToolbar: true,
-    enableStickyHeader: true,
-    enableStickyFooter: true,
+    enableStickyHeader: false,
+    enableStickyFooter: false,
     // paginationDisplayMode: 'pages',
     positionToolbarAlertBanner: 'bottom',
     muiSearchTextFieldProps: {
@@ -210,6 +277,7 @@ const DelegationTable = ({ rows }) => {
             : theme.palette.grey[150],
       }),
     },
+
     initialState: {
       density: 'compact',
       showGlobalFilter: true,
@@ -219,7 +287,13 @@ const DelegationTable = ({ rows }) => {
         totalDelegateAmount: false, 
         totalUndelegateAmount: false, 
         totalDelegateOperations: false, 
-        totalUndelegateOperations: false }
+        totalUndelegateOperations: false 
+      },
+      sorting: [{ id: 'createdAt', desc: true }],
+      pagination: { pageSize:15, pageIndex: 0 },
+
+      paginationDisplayMode: 'pages',
+        
     },
   });
   

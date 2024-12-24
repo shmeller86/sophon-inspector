@@ -1,0 +1,19 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev  # Указываем новый Dockerfile для разработки
+    volumes:
+      - ./frontend/app:/app  # Монтируем исходный код
+    ports:
+      - "3001:3000"  # Внешний порт для dev-сервера
+    environment:
+      - REACT_APP_API_URL=http://backend:8000  # API доступен локально
+      - CHOKIDAR_USEPOLLING=true  # Hot reload на Windows
+    command: ["npm", "start"]  # Запускаем dev-сервер
+
+
+  backend:
+    volumes:
+      - ./backend/app:/app  # Монтируем исходный код
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]  # Включаем hot reload

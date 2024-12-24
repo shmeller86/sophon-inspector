@@ -4,3 +4,4 @@ sophon.db
 SQLite.sql
 backend/templates
 container/
+backend/app/__pycache__/app.cpython-310.pyc

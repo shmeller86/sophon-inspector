@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копируем весь исходный код приложения
+COPY ./app ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+
+
+# Открываем порт 3000 для dev-сервера
+EXPOSE 3000
+
+# Запускаем dev-сервер React
+CMD ["npm", "start"]

@@ -276,14 +276,14 @@ const App = ({ toggleTheme, darkMode }) => {
           delegators: row[11] ? row[11].split(',') : [],
           status: row[1] === 1 ? 'Active' : 'Inactive',
           rewards: row[2] || '-',
-          fee: row[3] !== null ? `${row[3]}%` : '-',
-          uptime: row[4] !== null ? `${row[4]}%` : '-',
-          createdAt: row[5] || '-',
-          actualDelegations: row[6] || '-',
-          totalDelegateAmount: row[7] || '-',
-          totalUndelegateAmount: row[8] || '-',
-          totalDelegateOperations: row[9] || '-',
-          totalUndelegateOperations: row[10] || '-',
+          fee: row[3] !== null ? row[3] : null,
+          uptime: row[4] !== null ? row[4] : null,
+          createdAt: row[5] || null,
+          actualDelegations: row[6] || 0,
+          totalDelegateAmount: row[7] || 0,
+          totalUndelegateAmount: row[8] || 0,
+          totalDelegateOperations: row[9] || 0,
+          totalUndelegateOperations: row[10] || 0,
         }))
       );
 
