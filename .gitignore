@@ -1,0 +1,6 @@
+backend/__pycache__/
+.venv/
+sophon.db
+SQLite.sql
+backend/templates
+container/
