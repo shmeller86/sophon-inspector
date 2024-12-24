@@ -291,7 +291,7 @@ const App = ({ toggleTheme, darkMode }) => {
         rawPromoteTableData.map((row, index) => ({
           id: index,
           operator: row[0] || '-',
-          status: row[1] === true ? 'Active' : 'Inactive',
+          status: row[1] === true || row[1] === 'true' ? 'Active' : 'Inactive',
           emptySlots: row[2] || '-',
           fee: row[3] !== null ? `${row[3]}%` : '-',
           uptime: row[4] !== null ? `${row[4]}%` : '-',
