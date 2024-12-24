@@ -422,7 +422,7 @@ const App = ({ toggleTheme, darkMode }) => {
                 data={chartsData.topDelegators}
                 height="300px"
                 xAxisTitle="Delegators"
-                yAxisTitle="NFT"
+                yAxisTitle="Delegated"
             />
             </Box>
         </Stack>
