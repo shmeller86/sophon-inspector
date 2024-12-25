@@ -454,7 +454,6 @@ const App = ({ toggleTheme, darkMode }) => {
             </Box>
         </Stack>
       </Box>
-      <button onClick={() => showSnackbar('Operator copied to clipboard')}>Show Snackbar</button>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={1000} // Через 5 секунд исчезает
