@@ -30,8 +30,10 @@ import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useQuery, QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { padding } from '@mui/system';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const PromoteTable = ({ rows, isAuthorized, refreshData }) => {
+
+const PromoteTable = ({ rows, isAuthorized, refreshData, showSnackbar }) => {
   
     const [openDialog, setOpenDialog] = useState(false);
     const [inputText, setInputText] = useState('');
@@ -126,6 +128,31 @@ const PromoteTable = ({ rows, isAuthorized, refreshData }) => {
         Cell: ({ cell }) => (
             cell.getValue()
         ),
+        Cell: ({ cell }) => {
+          return (
+              <Box
+                  sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                  }}
+              >
+                  <Typography variant="body2" noWrap>
+                      {cell.getValue()}
+                      <Tooltip title="Copy to clipboard">
+                          <IconButton onClick={() => {
+                              navigator.clipboard.writeText(cell.getValue());
+                              showSnackbar(`Operator ${cell.getValue()} copied to clipboard`, 'success');
+                            }}
+                            sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                          >
+                              <ContentCopyIcon />
+                          </IconButton>
+                      </Tooltip>
+                  </Typography>
+              </Box>
+          );
+      },
     },
     {
         accessorKey: 'status',

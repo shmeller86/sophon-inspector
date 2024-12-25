@@ -17,6 +17,9 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import TelegramIcon from '@mui/icons-material/Telegram';
 
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
 
 const Header = ({
   systemInfo,
@@ -51,7 +54,11 @@ const Header = ({
           <img
             src="https://explorer.sophon.xyz/images/logo-sophon.svg"
             alt="Logo"
-            style={{ height: '20px', marginRight: '10px' }}
+            style={{
+              height: '20px',
+              marginRight: '10px',
+              filter: darkMode ? 'invert(1)' : 'none', // Инверсия цвета для темного режима
+            }}
           />
           {!isMobile && (
             <Typography
@@ -114,6 +121,26 @@ const App = ({ toggleTheme, darkMode }) => {
   const [promoteTableData, setPromoteTableData] = useState([]);
   const [chartsData, setChartsData] = useState({});
   const [systemInfo, setSystemInfo] = useState({ lastUpdate: '', lastBlock: '' });
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+
+  const showSnackbar = (message, severity = 'info') => {
+    console.log('Snackbar triggered with:', message, severity); // Отладка
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true); // Устанавливаем, что Snackbar открыт
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return; // Игнорируем клик мимо
+    }
+    setSnackbarOpen(false); // Закрываем Snackbar
+  };
+
+
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -331,11 +358,11 @@ const App = ({ toggleTheme, darkMode }) => {
 
       <Box mb={4}>
         <Typography variant="h5">Delegation Table</Typography>
-        <DelegationTable rows={tableData} />
+        <DelegationTable rows={tableData} showSnackbar={showSnackbar} />
       </Box>
       <Box mb={4}>
         <Typography variant="h5">Promote Table</Typography>
-        <PromoteTable rows={promoteTableData} isAuthorized={connectedAccount} refreshData={fetchData}  />
+        <PromoteTable rows={promoteTableData} isAuthorized={connectedAccount} refreshData={fetchData} showSnackbar={showSnackbar} />
       </Box>
       <Box mb={4}>
         <Typography variant="h5">Charts</Typography>
@@ -427,6 +454,21 @@ const App = ({ toggleTheme, darkMode }) => {
             </Box>
         </Stack>
       </Box>
+      <button onClick={() => showSnackbar('Operator copied to clipboard')}>Show Snackbar</button>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1000} // Через 5 секунд исчезает
+        onClose={handleSnackbarClose} // Закрытие по таймеру или вручную
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} // Расположение внизу
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity} // Уровень (success, error и т.д.)
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage || 'Something happened!'} {/* Показываем сообщение или дефолт */}
+        </MuiAlert>
+      </Snackbar>
     </Container>
   );
 };

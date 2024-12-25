@@ -99,7 +99,7 @@ async def schedule_main_script():
             await run_main_script()
         except Exception as e:
             print(f"Error in scheduled main.py execution: {e}")
-        await asyncio.sleep(600)  # Wait for 10 minutes
+        await asyncio.sleep(900)  # Wait for 15 minutes
 
 
 # Database helper function
@@ -165,10 +165,10 @@ async def refresh_cache():
             ]
             
             # Сохраняем в Redis как JSON-строку
-            await redis.set("table_data", json.dumps(serializable_data, default=convert_to_serializable), ex=900)
+            await redis.set("table_data", json.dumps(serializable_data, default=convert_to_serializable), ex=1100)
 
 
-            await asyncio.sleep(300)  # Wait for 5 minutes
+            await asyncio.sleep(1000)  # Wait for 16 minutes
     except Exception as e:
         print(f"Error in refresh_cache: {e}")
 

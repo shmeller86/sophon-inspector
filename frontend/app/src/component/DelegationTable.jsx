@@ -26,6 +26,10 @@ import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useQuery, QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { padding } from '@mui/system';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import BookmarkRemoveIcon from '@mui/icons-material/BookmarkRemove';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 
 // Хук для выполнения запросов
@@ -46,7 +50,7 @@ const useFetchDetails = (operator, enabled) => {
   });
 };
 
-const DetailPanel = ({ row }) => {
+const DetailPanel = ({ row, showSnackbar }) => {
   const operator = row.original.operator;
   const { data, isLoading, isError } = useFetchDetails(operator, row.getIsExpanded());
   
@@ -60,12 +64,12 @@ const DetailPanel = ({ row }) => {
   }
 
   return (
-    <TableContainer component={Box} sx={{ padding: '0px', maxWidth: '1000px' }}>
+    <TableContainer component={Box} sx={{ padding: '0px', maxWidth: '1000px'}}>
       {data && data.length > 0 ? (
         <Table size="small" aria-label="details table">
           <TableHead>
             <TableRow>
-              <TableCell><strong>Type</strong></TableCell>
+              <TableCell><strong></strong></TableCell>
               <TableCell><strong>Amount</strong></TableCell>
               <TableCell><strong>TX</strong></TableCell>
               <TableCell><strong>Delegator</strong></TableCell>
@@ -73,15 +77,81 @@ const DetailPanel = ({ row }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map(([id, address, type, amount, owner, createdAt]) => (
+            {data.map(([id, address, type, amount, owner, createdAt]) => { 
+              const txLink = `https://explorer.sophon.xyz/tx/${address}`;
+              const shortenedAddress = `${address.slice(0, 4)}...${address.slice(-2)}`;
+              const delegatorLink = `https://explorer.sophon.xyz/address/${owner}`;
+              const shortenedOwner = `${owner.slice(0, 4)}...${owner.slice(-2)}`;
+              return (
               <TableRow key={id}>
-                <TableCell>{type}</TableCell>
+                <TableCell sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {type.toLowerCase() === 'delegate' ? (
+                    <BookmarkAddIcon
+                      sx={{
+                        color: 'rgba(75, 192, 192, 1)',
+                        paddingRight: '4px',
+                        marginRight: '4px',
+                      }}
+                    />
+                  ) : (
+                    <BookmarkRemoveIcon
+                      sx={{
+                        color: 'rgba(255, 99, 132, 1)',
+                        paddingRight: '4px',
+                        marginRight: '4px',
+                      }}
+                    />
+                  )}
+                  {type}
+                </TableCell>
                 <TableCell>{amount}</TableCell>
-                <TableCell><a href={`https://explorer.sophon.xyz/tx/${address}`} target="_blank" rel="noopener noreferrer">{address}</a></TableCell>
-                <TableCell><a href={`https://explorer.sophon.xyz/address/${owner}`} target="_blank" rel="noopener noreferrer">{owner}</a></TableCell>
+                <TableCell>{shortenedAddress}
+                  <Tooltip title="Copy to clipboard">
+                      <IconButton onClick={() => {
+                          navigator.clipboard.writeText(address);
+                          showSnackbar(`Transaction ${address} copied to clipboard`, 'success');
+                        }}
+                        sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                      >
+                          <ContentCopyIcon />
+                      </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Open in explorer">
+                      <IconButton onClick={() => {
+                          window.open(txLink, '_blank');
+                        }}
+                        sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                      >
+                          <OpenInNewIcon />
+                      </IconButton>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  {shortenedOwner}
+                  <Tooltip title="Copy to clipboard">
+                      <IconButton onClick={() => {
+                          navigator.clipboard.writeText(owner);
+                          showSnackbar(`Delegator ${owner} copied to clipboard`, 'success');
+                        }}
+                        sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                      >
+                          <ContentCopyIcon />
+                      </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Open in explorer">
+                      <IconButton onClick={() => {
+                          window.open(delegatorLink, '_blank');
+                        }}
+                        sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                      >
+                          <OpenInNewIcon />
+                      </IconButton>
+                  </Tooltip>  
+                </TableCell>
                 <TableCell>{new Date(createdAt).toLocaleString()}</TableCell>
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
       ) : (
@@ -91,7 +161,7 @@ const DetailPanel = ({ row }) => {
   );
 };
 
-const DelegationTable = ({ rows }) => {
+const DelegationTable = ({ rows, showSnackbar }) => {
     const [openDelegatorsDialog, setOpenDelegatorsDialog] = useState(false);
     const [selectedDelegators, setSelectedDelegators] = useState([]);
 
@@ -108,30 +178,39 @@ const DelegationTable = ({ rows }) => {
     }));
 
     const columns = [
-    {
+      {
         accessorKey: 'operator',
         header: 'Operator',
         minSize: 50,
-        maxSize: 250,
-        size: 200,
-        Cell: ({ cell }) => (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              navigator.clipboard.writeText(cell.getValue());
-              alert('Operator copied to clipboard');
-            }}
-          >
-            <Typography variant="body2" noWrap>
-              {cell.getValue()}
-            </Typography>
-          </Box>
-        ),
+        maxSize: 100,
+        size: 100,
+        Cell: ({ cell }) => {
+            const value = cell.getValue();
+            const shortenedValue = `${value.slice(0, 4)}...${value.slice(-2)}`; // Берем первые 4 и последние 2 символа
+            return (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                    }}
+                >
+                    <Typography variant="body2" noWrap>
+                        {shortenedValue}
+                        <Tooltip title="Copy to clipboard">
+                            <IconButton onClick={() => {
+                                navigator.clipboard.writeText(value);
+                                showSnackbar(`Operator ${value} copied to clipboard`, 'success');
+                              }}
+                              sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                            >
+                                <ContentCopyIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Typography>
+                </Box>
+            );
+        },
     },
     {
         accessorKey: 'delegatorsCount',
@@ -267,7 +346,7 @@ const DelegationTable = ({ rows }) => {
       variant: 'outlined',
       sx: {},
     },
-    renderDetailPanel: ({ row }) => <DetailPanel row={row} />,
+    renderDetailPanel: ({ row }) => <DetailPanel row={row} showSnackbar={showSnackbar} />,
     muiTableContainerProps: { sx: { } },
     muiTableBodyCellProps: {
       sx: (theme) => ({
