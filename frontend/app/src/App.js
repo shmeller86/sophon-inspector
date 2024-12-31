@@ -208,7 +208,7 @@ const App = ({ toggleTheme, darkMode }) => {
       };
 
       const formattedCommissionDistributionData = {
-        labels: commissionData.fee.map(op => `${op}`),
+        labels: commissionData.fee.map(op => `${parseFloat(op).toFixed(1)}`),
         values: commissionData.operators,
         colors: commissionData.fee.map(() =>
           `rgba(103, 193, 249, 0.6)`
