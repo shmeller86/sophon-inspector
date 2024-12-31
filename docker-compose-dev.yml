@@ -11,9 +11,44 @@ services:
       - REACT_APP_API_URL=http://backend:8000  # API доступен локально
       - CHOKIDAR_USEPOLLING=true  # Hot reload на Windows
     command: ["npm", "start"]  # Запускаем dev-сервер
-
+    networks:
+      - sophon-network
 
   backend:
+    build:
+        context: ./backend
+        dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://sophon:sophon@postgres:5432/sophon
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./backend/app:/app  # Монтируем исходный код
     command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]  # Включаем hot reload
+    networks:
+      - sophon-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: sophon
+      POSTGRES_PASSWORD: sophon
+      POSTGRES_DB: sophon
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./container/postgres:/var/lib/postgresql/data
+    networks:
+      - sophon-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - sophon-network
+
+networks:
+  sophon-network:
+    driver: bridge

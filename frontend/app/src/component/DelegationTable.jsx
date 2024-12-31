@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     MaterialReactTable,
     useMaterialReactTable,
@@ -30,7 +30,10 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import BookmarkRemoveIcon from '@mui/icons-material/BookmarkRemove';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { Switch, FormControlLabel } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 // Хук для выполнения запросов
 const useFetchDetails = (operator, enabled) => {
@@ -53,18 +56,23 @@ const useFetchDetails = (operator, enabled) => {
 const DetailPanel = ({ row, showSnackbar }) => {
   const operator = row.original.operator;
   const { data, isLoading, isError } = useFetchDetails(operator, row.getIsExpanded());
-  
+  const theme = useTheme();
 
   if (isLoading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (isError) {
     return <Typography color="error">Error loading details</Typography>;
   }
 
+
   return (
-    <TableContainer component={Box} sx={{ padding: '0px', maxWidth: '1000px'}}>
+    <TableContainer component={Box} sx={{ padding: '0px', maxWidth: '1000px', backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[200] }}>
       {data && data.length > 0 ? (
         <Table size="small" aria-label="details table">
           <TableHead>
@@ -161,10 +169,31 @@ const DetailPanel = ({ row, showSnackbar }) => {
   );
 };
 
-const DelegationTable = ({ rows, showSnackbar }) => {
+const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
+    const [favorites, setFavorites] = useState(
+      JSON.parse(localStorage.getItem('favoriteOperators')) || []
+    );
+    const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+    const handleToggleFavorites = () => {
+      setShowOnlyFavorites(!showOnlyFavorites);
+    };
+
     const [openDelegatorsDialog, setOpenDelegatorsDialog] = useState(false);
     const [selectedDelegators, setSelectedDelegators] = useState([]);
 
+    const toggleFavorite = (operator) => {
+      if (favorites.includes(operator)) {
+        setFavorites(favorites.filter((fav) => fav !== operator));
+        showSnackbar(`Operator ${operator} removed from favorites`, 'success');
+      } else {
+        setFavorites([...favorites, operator]);
+        showSnackbar(`Operator ${operator} added to favorites`, 'success');
+      }
+    };
+
+    useEffect(() => {
+      localStorage.setItem('favoriteOperators', JSON.stringify(favorites));
+    }, [favorites]);
 
     const StyledBadge = styled(Badge)(({ theme }) => ({
         '& .MuiBadge-badge': {
@@ -177,6 +206,13 @@ const DelegationTable = ({ rows, showSnackbar }) => {
         },
     }));
 
+    const filteredRows = useMemo(() => {
+      if (showOnlyFavorites) {
+        return rows.filter((row) => favorites.includes(row.operator));
+      }
+      return rows;
+    }, [rows, favorites, showOnlyFavorites]);
+
     const columns = [
       {
         accessorKey: 'operator',
@@ -186,7 +222,8 @@ const DelegationTable = ({ rows, showSnackbar }) => {
         size: 100,
         Cell: ({ cell }) => {
             const value = cell.getValue();
-            const shortenedValue = `${value.slice(0, 4)}...${value.slice(-2)}`; // Берем первые 4 и последние 2 символа
+            const shortenedValue = `${value.slice(0, 6)}...${value.slice(-4)}`;
+            const isFavorite = favorites.includes(value);
             return (
                 <Box
                     sx={{
@@ -206,6 +243,14 @@ const DelegationTable = ({ rows, showSnackbar }) => {
                             >
                                 <ContentCopyIcon />
                             </IconButton>
+                        </Tooltip>
+                        <Tooltip title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
+                          <IconButton
+                            onClick={() => toggleFavorite(value)}
+                            sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                          >
+                            {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+                          </IconButton>
                         </Tooltip>
                     </Typography>
                 </Box>
@@ -291,7 +336,11 @@ const DelegationTable = ({ rows, showSnackbar }) => {
           step: 1,
         },
     },
-    { accessorKey: 'createdAt', header: 'Created At', size: 80 },
+    { accessorKey: 'createdAt', 
+      header: 'Created At', 
+      size: 80,
+      filterFn: 'includesString',
+    },
     { accessorKey: 'actualDelegations', 
       header: 'Delegations', 
       size: 120,
@@ -308,6 +357,61 @@ const DelegationTable = ({ rows, showSnackbar }) => {
     { accessorKey: 'totalUndelegateAmount', header: 'Total Undelegate Amount', size: 80, enableHiding: true },
     { accessorKey: 'totalDelegateOperations', header: 'Total Delegate Operations', size: 80, enableHiding: true },
     { accessorKey: 'totalUndelegateOperations', header: 'Total Undelegate Operations', size: 80, enableHiding: true },
+    { accessorKey: 'currentDelegators', 
+      header: 'Current Delegators', 
+      size: 80, 
+      enableHiding: true,
+      Cell: ({ cell }) => {
+        const values = cell.getValue();
+        const lines = values ? values.split(',') : [];
+      
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            {lines.length > 0 ? (
+              lines.map((line, index) => {
+                const shortenedValue = `${line.slice(0, 6)}...${line.slice(-4)}`; // Сокращаем каждую строку
+                return (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Typography variant="body2" noWrap>
+                      {shortenedValue}
+                    </Typography>
+                    <Tooltip title="Copy to clipboard">
+                      <IconButton
+                        onClick={() => {
+                          navigator.clipboard.writeText(line);
+                          showSnackbar(`Value ${line} copied to clipboard`, 'success');
+                        }}
+                        sx={{ padding: '0px 0px 0px 4px', margin: '0px' }}
+                      >
+                        <ContentCopyIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                );
+              })
+            ) : (
+              <Typography variant="body2" color="textSecondary">
+                -
+              </Typography>
+            )}
+          </Box>
+        );
+      },
+      
+    },
   ];
 
   const handleDelegatorsClick = (delegators) => {
@@ -322,9 +426,10 @@ const DelegationTable = ({ rows, showSnackbar }) => {
   const table = useMaterialReactTable({
     columns,
     
-    data: rows,
+    data: filteredRows,
     enableRowVirtualization: false,
     enableGlobalFilter: true,
+    globalFilterFn: 'contains',
     enableFacetedValues: true,
     enableColumnFilters: true,
     enableRowSelection: false,
@@ -356,6 +461,20 @@ const DelegationTable = ({ rows, showSnackbar }) => {
             : theme.palette.grey[150],
       }),
     },
+    renderTopToolbarCustomActions: () => (
+      <Box sx={{ display: 'flex', gap: '1rem', p: '0.5rem', flexWrap: 'wrap' }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showOnlyFavorites}
+              onChange={handleToggleFavorites}
+              color="primary"
+            />
+          }
+          label="Show only favorites"
+        />
+      </Box>
+    ),
 
     initialState: {
       density: 'compact',
@@ -366,15 +485,24 @@ const DelegationTable = ({ rows, showSnackbar }) => {
         totalDelegateAmount: false, 
         totalUndelegateAmount: false, 
         totalDelegateOperations: false, 
-        totalUndelegateOperations: false 
+        totalUndelegateOperations: false,
+        currentDelegators: false,
       },
       sorting: [{ id: 'createdAt', desc: true }],
-      pagination: { pageSize:15, pageIndex: 0 },
+      pagination: { pageSize:25, pageIndex: 0 },
 
       paginationDisplayMode: 'pages',
         
     },
   });
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   
 
   return (

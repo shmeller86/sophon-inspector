@@ -12,7 +12,6 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import TelegramIcon from '@mui/icons-material/Telegram';
@@ -51,15 +50,17 @@ const Header = ({
       >
         {/* Логотип */}
         <Box display="flex" alignItems="center">
-          <img
-            src="https://explorer.sophon.xyz/images/logo-sophon.svg"
-            alt="Logo"
+          <a href="/">
+            <img
+              src="https://explorer.sophon.xyz/images/logo-sophon.svg"
+              alt="Logo"
             style={{
               height: '20px',
               marginRight: '10px',
               filter: darkMode ? 'invert(1)' : 'none', // Инверсия цвета для темного режима
             }}
           />
+          </a>
           {!isMobile && (
             <Typography
               variant="h6"
@@ -125,7 +126,7 @@ const App = ({ toggleTheme, darkMode }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info');
-
+  const [tableDataIsLoading, setTableDataIsLoading] = useState(true);
   const showSnackbar = (message, severity = 'info') => {
     console.log('Snackbar triggered with:', message, severity); // Отладка
     setSnackbarMessage(message);
@@ -250,10 +251,10 @@ const App = ({ toggleTheme, darkMode }) => {
       };
 
       const formattedOperatorStatusData = {
-        labels: operatorStatusData.statuses.map(op => (op === 0 ? 'Inactive' : 'Active')),
+        labels: operatorStatusData.statuses.map(op => (op === false ? 'Inactive' : 'Active')),
         values: operatorStatusData.counts,
         colors: operatorStatusData.statuses.map(op =>
-          op === 0
+          op === false
             ? 'rgba(255, 99, 132, 0.6)'
             : `rgba(103, 193, 249, 0.6)`
         ),
@@ -311,8 +312,10 @@ const App = ({ toggleTheme, darkMode }) => {
           totalUndelegateAmount: row[8] || 0,
           totalDelegateOperations: row[9] || 0,
           totalUndelegateOperations: row[10] || 0,
+          currentDelegators: row[11] || 0,
         }))
       );
+      setTableDataIsLoading(false);
 
       setPromoteTableData(
         rawPromoteTableData.map((row, index) => ({
@@ -358,12 +361,12 @@ const App = ({ toggleTheme, darkMode }) => {
 
       <Box mb={4}>
         <Typography variant="h5">Delegation Table</Typography>
-        <DelegationTable rows={tableData} showSnackbar={showSnackbar} />
+        <DelegationTable rows={tableData} isLoading={tableDataIsLoading} showSnackbar={showSnackbar} />
       </Box>
-      <Box mb={4}>
+      {/* <Box mb={4}>
         <Typography variant="h5">Promote Table</Typography>
         <PromoteTable rows={promoteTableData} isAuthorized={connectedAccount} refreshData={fetchData} showSnackbar={showSnackbar} />
-      </Box>
+      </Box> */}
       <Box mb={4}>
         <Typography variant="h5">Charts</Typography>
         <Stack 
@@ -374,7 +377,7 @@ const App = ({ toggleTheme, darkMode }) => {
             <Box flex={1} minWidth={{ xs: '100%', md: '45%' }}>
               <BarChart
                   title="Status of operators"
-                  chartId="summaryChart"
+                  chartId="StatusChart"
                   type="bar"
                   data={chartsData.operatorStatus}
                   height="300px"
