@@ -215,6 +215,19 @@ def explorer_parse():
 
         update_system_table(end)
 
+def sophon_node_test_update():
+    response = requests.get(f"https://monitor.sophon.xyz/nodes?page=99999999&per_page=100")
+    if response.status_code != 200:
+        print(f"Failed to fetch test nodes count: {response.status_code}")
+
+    nodes = response.json().get("nodes", [])
+    if len(nodes) == 0:
+        print(f"No test nodes found len(nodes) == 0, {len(nodes)}")
+        return True
+    else:
+        print(f"Test nodes found len(nodes) != 0, {len(nodes)}")
+        return False
+
 
 def sophon_nodes_update():
     page = 1
@@ -262,7 +275,8 @@ create_system_table()
 print("System table created.")
 
 print("Starting node update...")
-sophon_nodes_update()
+if sophon_node_test_update():
+    sophon_nodes_update()
 print("Node update completed.")
 
 print("Starting block processing...")
