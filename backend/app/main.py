@@ -276,9 +276,8 @@ create_system_table()
 print("System table created.")
 
 print("Starting node update...")
-# if sophon_node_test_update():
-#     sophon_nodes_update()
-sophon_nodes_update()
+if sophon_node_test_update():
+    sophon_nodes_update()
 print("Node update completed.")
 
 print("Starting block processing...")
