@@ -18,8 +18,8 @@ import { Box, IconButton, Dialog, DialogTitle, DialogContent, Typography, Toolti
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
- } from '@mui/material';
+  TableRow, Button, Modal
+} from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
@@ -33,6 +33,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { Switch, FormControlLabel } from '@mui/material';
+import HttpIcon from '@mui/icons-material/Http';
 import { useTheme } from '@mui/material/styles';
 
 // Хук для выполнения запросов
@@ -278,37 +279,104 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
       header: 'Status',
       filterVariant: 'checkbox',
       filterFn: (row, columnId, filterValue) => {
-          const rowValue = row.getValue(columnId);
-          if (!filterValue) {
-              console.log('FilterValue is empty, showing all records');
-              return true;
-          }
-            if (filterValue.includes(true) && rowValue === 'Active') {
-              return true;
-          } else if (filterValue.includes(false) && rowValue === 'Inactive') {
-              return true;
-          }
-            return false;
+        const rowValue = row.getValue(columnId);
+        if (!filterValue) {
+          console.log('FilterValue is empty, showing all records');
+          return true;
+        }
+        if (filterValue.includes(true) && rowValue === 'Active') {
+          return true;
+        } else if (filterValue.includes(false) && rowValue === 'Inactive') {
+          return true;
+        }
+        return false;
       },
-      size: 120,
-      Cell: ({ cell }) => (
-          <Box
+      size: 150,
+      Cell: ({ row }) => {
+        const status = row.original.status;
+        const lastNodeUpdate = row.original.lastNodeUpdate;
+        const operator = row.original.operator;
+        const [open, setOpen] = useState(false);
+        const [nodeData, setNodeData] = useState(null);
+
+        const handleOpen = async () => {
+          try {
+            const response = await fetch(`https://monitor.sophon.xyz/nodes?operators=${operator}`);
+            const data = await response.json();
+            setNodeData(data);
+            setOpen(true);
+          } catch (error) {
+            console.error('Error fetching node data:', error);
+          }
+        };
+    
+        const handleClose = () => {
+          setOpen(false);
+        };
+        
+        const currentDate = new Date();
+        const lastUpdateDate = new Date(lastNodeUpdate);
+        const oneDatAgo = new Date(currentDate.getTime() - 60 * 60 * 24 * 1000);
+        
+        const showUpdated = lastUpdateDate < oneDatAgo;
+        
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box
               component="span"
               sx={{
-                  backgroundColor:
-                      cell.getValue() === 'Active'
-                          ? 'rgba(75, 192, 192, 1)' // Цвет для Active
-                          : 'rgba(255, 99, 132, 1)', // Цвет для Inactive
-                  borderRadius: '0.5rem',
-                  color: '#fff',
-                  padding: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor:
+                  status === 'Active'
+                    ? 'rgba(75, 192, 192, 1)' // Цвет для Active
+                    : 'rgba(255, 99, 132, 1)', // Цвет для Inactive
+                borderRadius: '0.5rem',
+                color: '#fff',
+                padding: '0.5rem',
+                marginBottom: '0.5rem',
               }}
-          >
-              {cell.getValue()}
+            >
+              {status}
+              <Button disabled={open} onClick={handleOpen} variant="contained" size="small" startIcon={<HttpIcon />} sx={{ marginLeft: '0.5rem', opacity: 0.7 }}>
+                Check
+              </Button>
+            </Box>
+            {showUpdated && (
+              <Typography variant="body2" color="textSecondary" sx={{ fontSize: '8px' }}>
+                updated: {new Date(lastNodeUpdate).toLocaleString()}
+              </Typography>
+            )}
+
+
+              
+
+        <Modal open={open} onClose={handleClose}>
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+          }}>
+
+            {nodeData ? (
+              <pre>{JSON.stringify(nodeData, null, 2)}</pre>
+            ) : (
+              <Typography>Loading...</Typography>
+            )}
+            <Button onClick={handleClose} variant="contained" size="small">Close</Button>
           </Box>
-      ),
-  }
-  ,
+        </Modal>
+
+        
+          </Box>
+        );
+      },
+    },
     { accessorKey: 'rewards', header: 'Rewards', size: 80,},
     { accessorKey: 'fee', 
       header: 'Fee', 
@@ -340,6 +408,10 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
       header: 'Created At', 
       size: 80,
       filterFn: 'includesString',
+      Cell: ({ cell }) => {
+        const value = cell.getValue();
+        return <Typography variant="body2">{new Date(value).toLocaleString()}</Typography>;
+      },
     },
     { accessorKey: 'actualDelegations', 
       header: 'Delegations', 
@@ -351,6 +423,16 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
         max: 20,
         min: 0,
         step: 1,
+      },
+      Cell: ({ cell }) => {
+        const value = cell.getValue();
+        if (value === null) {
+          return <Typography variant="body2">-</Typography>;
+        }
+        if (value < 0) {
+          return <Typography variant="body2">0</Typography>;
+        }
+        return <Typography variant="body2">{value}</Typography>;
       },
     },
     { accessorKey: 'totalDelegateAmount', header: 'Total Delegate Amount', size: 80, enableHiding: true },

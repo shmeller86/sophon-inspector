@@ -67,7 +67,7 @@ const Header = ({
               component="div"
               sx={{ color: darkMode ? '#ddd' : '#888', fontSize: '8px' }}
             >
-              Updated: {systemInfo.last_update} (UTC+0) | BLOCK: {systemInfo.last_block}
+              Updated: {new Date(systemInfo.last_update).toLocaleString()} | Block: {systemInfo.last_block}
             </Typography>
           )}
         </Box>
@@ -313,6 +313,7 @@ const App = ({ toggleTheme, darkMode }) => {
           totalDelegateOperations: row[9] || 0,
           totalUndelegateOperations: row[10] || 0,
           currentDelegators: row[11] || 0,
+          lastNodeUpdate: row[12] || null,
         }))
       );
       setTableDataIsLoading(false);

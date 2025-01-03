@@ -256,7 +256,8 @@ def sophon_nodes_update():
                     status = EXCLUDED.status,
                     rewards = EXCLUDED.rewards,
                     fee = EXCLUDED.fee,
-                    uptime = EXCLUDED.uptime;
+                    uptime = EXCLUDED.uptime,
+                    updated_at = now();
             """
             execute_query(query, (operator, status, rewards, fee, uptime), fetchall=False)
 

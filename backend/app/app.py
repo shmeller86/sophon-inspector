@@ -162,7 +162,13 @@ async def refresh_cache():
                 n.rewards,
                 n.fee::double precision AS fee,
                 ROUND(n.uptime::numeric, 1) AS uptime,
-                MIN(CASE WHEN l.event_type = 'DELEGATE' THEN l.timestamp ELSE NULL END) AS created_at, 
+                MIN(
+                CASE 
+                    WHEN l.event_type = 'DELEGATE' 
+                    THEN TO_CHAR(l.timestamp, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ELSE NULL 
+                END
+                ) AS created_at,
                 COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) - 
                 COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS actual_delegations,
                 COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) AS total_delegate_amount,
@@ -182,7 +188,8 @@ async def refresh_cache():
                                 AND l3.event_type = 'UNDELEGATE' 
                                 AND l3.timestamp > l2.timestamp
                         )
-                        ), '') AS current_delegators
+                        ), '') AS current_delegators,
+                n.updated_at as last_node_update
             FROM 
                 nodes n 
             LEFT JOIN 
@@ -231,13 +238,14 @@ async def table_data():
                     row["rewards"],
                     row["fee"],
                     row["uptime"],
-                    row["created_at"].strftime("%Y-%m-%d %H:%M:%S") if row["created_at"] else None,
+                    row["created_at"] if row["created_at"] else None,
                     row["actual_delegations"],
                     row["total_delegate_amount"],
                     row["total_undelegate_amount"],
                     row["total_delegate_operations"],
                     row["total_undelegate_operations"],
-                    row["current_delegators"]
+                    row["current_delegators"],
+                    row["last_node_update"] if row["last_node_update"] else None
                 ]
                 for row in cached_data
             ]
@@ -254,7 +262,13 @@ async def table_data():
         n.rewards, 
         n.fee::double precision AS fee, 
         ROUND(n.uptime::numeric, 1) AS uptime, 
-        MIN(CASE WHEN l.event_type = 'DELEGATE' THEN l.timestamp ELSE NULL END) AS created_at, 
+        MIN(
+            CASE 
+                WHEN l.event_type = 'DELEGATE' 
+                THEN TO_CHAR(l.timestamp, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                ELSE NULL 
+            END
+            ) AS created_at,
         COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) - 
         COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS actual_delegations, 
         COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) AS total_delegate_amount, 
@@ -274,7 +288,8 @@ async def table_data():
                         AND l3.event_type = 'UNDELEGATE' 
                         AND l3.timestamp > l2.timestamp
                 )
-            ), '') AS current_delegators
+            ), '') AS current_delegators,
+        n.updated_at as last_node_update
     FROM 
         nodes n 
     LEFT JOIN 
@@ -308,13 +323,14 @@ async def table_data():
                 row["rewards"],
                 row["fee"],
                 row["uptime"],
-                row["created_at"].strftime("%Y-%m-%d %H:%M:%S") if row["created_at"] else None,
+                row["created_at"] if row["created_at"] else None,
                 row["actual_delegations"],
                 row["total_delegate_amount"],
                 row["total_undelegate_amount"],
                 row["total_delegate_operations"],
                 row["total_undelegate_operations"],
-                row["current_delegators"]
+                row["current_delegators"],
+                row["last_node_update"] if row["last_node_update"] else None
             ]
             for row in data
         ]
