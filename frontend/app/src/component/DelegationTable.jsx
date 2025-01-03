@@ -411,7 +411,7 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
         },
     },
     { accessorKey: 'createdAt', 
-      header: 'Created At', 
+      header: 'First Delegate', 
       size: 80,
       filterFn: 'includesString',
       Cell: ({ cell }) => {
