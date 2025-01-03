@@ -407,6 +407,9 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
       filterFn: 'includesString',
       Cell: ({ cell }) => {
         const value = cell.getValue();
+        if (value === null) {
+          return <Typography variant="body2">-</Typography>;
+        }
         return <Typography variant="body2">{new Date(value).toLocaleString()}</Typography>;
       },
     },
