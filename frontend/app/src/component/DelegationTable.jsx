@@ -343,14 +343,12 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
                 Check
               </Button>
             </Box>
-            {showUpdated && (
+            
+            {/* {showUpdated && (
               <Typography variant="body2" color="textSecondary" sx={{ fontSize: '8px' }}>
                 updated: {new Date(lastNodeUpdate).toLocaleString()}
               </Typography>
-            )}
-
-
-              
+            )} */}
 
         <Modal open={open} onClose={handleClose}>
           <Box sx={{
