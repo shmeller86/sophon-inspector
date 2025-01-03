@@ -163,18 +163,21 @@ async def refresh_cache():
                 n.fee::double precision AS fee,
                 ROUND(n.uptime::numeric, 1) AS uptime,
                 MIN(
-                CASE 
-                    WHEN l.event_type = 'DELEGATE' 
-                    THEN TO_CHAR(l.timestamp, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ELSE NULL 
-                END
-                ) AS created_at,
+                    CASE 
+                        WHEN l.event_type = 'DELEGATE' 
+                        THEN TO_CHAR(
+                            l.timestamp AT TIME ZONE 'UTC',
+                            'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+                        )
+                        ELSE NULL 
+                    END
+                    ) AS created_at,
                 COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) - 
-                COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS actual_delegations,
-                COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) AS total_delegate_amount,
-                COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS total_undelegate_amount,
-                COUNT(CASE WHEN l.event_type = 'DELEGATE' THEN 1 ELSE NULL END) AS total_delegate_operations,
-                COUNT(CASE WHEN l.event_type = 'UNDELEGATE' THEN 1 ELSE NULL END) AS total_undelegate_operations,
+                COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS actual_delegations, 
+                COALESCE(SUM(CASE WHEN l.event_type = 'DELEGATE' THEN l.amount ELSE 0 END), 0) AS total_delegate_amount, 
+                COALESCE(SUM(CASE WHEN l.event_type = 'UNDELEGATE' THEN l.amount ELSE 0 END), 0) AS total_undelegate_amount, 
+                COUNT(CASE WHEN l.event_type = 'DELEGATE' THEN 1 ELSE NULL END) AS total_delegate_operations, 
+                COUNT(CASE WHEN l.event_type = 'UNDELEGATE' THEN 1 ELSE NULL END) AS total_undelegate_operations, 
                 COALESCE(
                     (SELECT STRING_AGG(DISTINCT guardian, ',') 
                         FROM logs l2 
@@ -188,8 +191,11 @@ async def refresh_cache():
                                 AND l3.event_type = 'UNDELEGATE' 
                                 AND l3.timestamp > l2.timestamp
                         )
-                        ), '') AS current_delegators,
-                n.updated_at as last_node_update
+                    ), '') AS current_delegators,
+                TO_CHAR(
+                    n.updated_at AT TIME ZONE 'UTC',
+                    'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+                ) as last_node_update
             FROM 
                 nodes n 
             LEFT JOIN 
@@ -265,7 +271,10 @@ async def table_data():
         MIN(
             CASE 
                 WHEN l.event_type = 'DELEGATE' 
-                THEN TO_CHAR(l.timestamp, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                THEN TO_CHAR(
+                    l.timestamp AT TIME ZONE 'UTC',
+                    'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+                )
                 ELSE NULL 
             END
             ) AS created_at,
@@ -289,7 +298,10 @@ async def table_data():
                         AND l3.timestamp > l2.timestamp
                 )
             ), '') AS current_delegators,
-        n.updated_at as last_node_update
+        TO_CHAR(
+            n.updated_at AT TIME ZONE 'UTC',
+            'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+        ) as last_node_update
     FROM 
         nodes n 
     LEFT JOIN 
@@ -459,7 +471,7 @@ async def commission_distribution():
 
 @app.get("/api/system-info")
 async def system_info():
-    query = "SELECT * FROM system;"
+    query = "SELECT id, to_char(last_run_timestamp AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') AS last_run_timestamp, last_processed_block FROM system;"
     data = await execute_query(query)
     return {"last_update": [row[1] for row in data], "last_block": [row[2] for row in data]}
 

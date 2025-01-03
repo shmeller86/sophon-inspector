@@ -334,12 +334,11 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
                     : 'rgba(255, 99, 132, 1)', // Цвет для Inactive
                 borderRadius: '0.5rem',
                 color: '#fff',
-                padding: '0.5rem',
-                marginBottom: '0.5rem',
+                paddingLeft: '0.5rem',
               }}
             >
-              {status}
-              <Button disabled={open} onClick={handleOpen} variant="contained" size="small" startIcon={<HttpIcon />} sx={{ marginLeft: '0.5rem', opacity: 0.7 }}>
+              <Typography variant="body2" sx={{ marginLeft: '0.5rem' }}>{status}</Typography>
+              <Button disabled={open} onClick={handleOpen}  variant="contained" size="small" startIcon={<HttpIcon />} sx={{ marginLeft: '0.5rem',borderRadius: '0rem 0.5rem 0.5rem 0rem', opacity: 0.7 }}>
                 Check
               </Button>
             </Box>
