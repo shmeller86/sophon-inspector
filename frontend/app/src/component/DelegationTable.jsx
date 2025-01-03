@@ -343,11 +343,11 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
               </Button>
             </Box>
             
-            {/* {showUpdated && (
-              <Typography variant="body2" color="textSecondary" sx={{ fontSize: '8px' }}>
-                updated: {new Date(lastNodeUpdate).toLocaleString()}
+            {showUpdated && (
+              <Typography variant="body2" color="#ee9d5a" sx={{ fontSize: '8px' }}>
+                Valid as of {new Date(lastNodeUpdate).toLocaleString()}
               </Typography>
-            )} */}
+            )}
 
         <Modal open={open} onClose={handleClose}>
           <Box sx={{
@@ -391,7 +391,16 @@ const DelegationTable = ({ rows, isLoading, showSnackbar }) => {
     { accessorKey: 'uptime', 
       header: 'Uptime', 
       size: 120,
-      Cell: ({ cell }) => `${Number(cell.getValue()).toFixed(1)}%`,
+      Cell: ({ row }) => {
+        const value = row.original.uptime;
+        const lastUpdateDate = new Date(row.original.lastNodeUpdate);
+        const oneDatAgo = new Date(new Date().getTime() - 60 * 60 * 24 * 1000);
+        const showUpdated = lastUpdateDate < oneDatAgo;
+        if (showUpdated) {
+          return <Typography variant="body2" color="#ee9d5a">{`${Number(value).toFixed(1)}%`}</Typography>;
+        }
+        return <Typography variant="body2">{`${Number(value).toFixed(1)}%`}</Typography>;
+      },
       filterVariant: 'range-slider',
         filterFn: 'betweenInclusive', // default (or between)
         muiFilterSliderProps: {

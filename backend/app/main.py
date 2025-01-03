@@ -233,7 +233,7 @@ def sophon_nodes_update():
     page = 1
     while True:
         print(f"Fetching nodes for page {page}")
-        response = requests.get(f"https://monitor.sophon.xyz/nodes?page={page}&per_page=100")
+        response = requests.get(f"https://monitor.sophon.xyz/nodes?page={page}&per_page=300")
         if response.status_code != 200:
             print(f"Failed to fetch nodes for page {page}: {response.status_code}")
             break
@@ -262,6 +262,10 @@ def sophon_nodes_update():
             execute_query(query, (operator, status, rewards, fee, uptime), fetchall=False)
 
         page += 1
+        nodes = response.json().get("nodes", [])
+        if len(nodes) == 1000:
+            print(f"No more nodes found, {len(nodes)}")
+            break
 
 
 # Перед запуском основной логики
@@ -276,8 +280,8 @@ create_system_table()
 print("System table created.")
 
 print("Starting node update...")
-if sophon_node_test_update():
-    sophon_nodes_update()
+# if sophon_node_test_update():
+sophon_nodes_update()
 print("Node update completed.")
 
 print("Starting block processing...")
