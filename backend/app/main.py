@@ -97,7 +97,7 @@ def create_system_table():
             last_processed_block INTEGER
         );
     """
-
+    
     query_visits = """
         CREATE TABLE IF NOT EXISTS visits (
             id SERIAL PRIMARY KEY,

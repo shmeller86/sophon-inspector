@@ -399,7 +399,10 @@ async def operator_details(operator: str):
         event_type,
         amount,
         guardian,
-        timestamp
+        TO_CHAR(
+            timestamp AT TIME ZONE 'UTC',
+            'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+        ) as timestamp
     FROM logs 
     WHERE operator = $1
     ORDER BY timestamp DESC;"""  # исправили форматирование
